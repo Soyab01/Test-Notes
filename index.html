@@ -1,3 +1,4 @@
+<!-- START OF FILE Paste February 06, 2026 - 2:25AM -->
 <!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -13,9 +14,28 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     
     <style>
-        :root { --primary: #6366f1; --glass: rgba(255, 255, 255, 0.08); --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%); }
+        :root { --primary: #6366f1; --secondary: #a855f7; --glass: rgba(255, 255, 255, 0.08); --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%); }
         body { background: var(--bg-gradient); color: #f8fafc; font-family: 'Poppins', sans-serif; min-height: 100vh; overflow-x: hidden; padding-bottom: 120px; user-select: none; }
-        .glass-card { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.15); border-radius: 25px; padding: 22px; margin-bottom: 18px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
+        
+        /* 3D Glass Card Effect */
+        .glass-card { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.15); border-radius: 25px; padding: 22px; margin-bottom: 18px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); transition: transform 0.3s; }
+        .glass-card:active { transform: scale(0.98); }
+        
+        /* 3D Login Specific */
+        .auth-card-3d {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(40px);
+            border-top: 1px solid rgba(255,255,255,0.2);
+            border-left: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 20px 20px 50px rgba(0,0,0,0.5), -5px -5px 30px rgba(255,255,255,0.05);
+            border-radius: 30px;
+            padding: 30px;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+
         .nav-dock { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; background: rgba(15, 23, 42, 0.95); border-radius: 30px; display: flex; justify-content: space-around; padding: 10px 5px; z-index: 8000; border: 1px solid rgba(255,255,255,0.15); }
         .nav-link-3d { color: rgba(255,255,255,0.4); text-decoration: none; text-align: center; flex: 1; font-size: 0.7rem; cursor: pointer; }
         .nav-link-3d.active { color: var(--primary); transform: translateY(-5px); text-shadow: 0 0 10px var(--primary); }
@@ -34,43 +54,78 @@
         .lock-icon { opacity: 0.5; filter: grayscale(1); }
         .rank-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .rank-num { width: 30px; font-weight: bold; color: #fbbf24; }
-        .auth-input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 10px; padding: 10px; width: 100%; margin-bottom: 10px; outline: none; }
+        .auth-input { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 12px; padding: 12px; width: 100%; margin-bottom: 12px; outline: none; transition: 0.3s; }
+        .auth-input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); }
         .carousel-item img { height: 180px; object-fit: cover; width: 100%; border-radius: 20px; }
+        
+        /* Result Grid Stats */
+        .res-stat-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .res-val { font-size: 1.2rem; font-weight: bold; display: block; }
+        .res-lbl { font-size: 0.7rem; opacity: 0.7; }
+        
         @media(min-width: 768px) { .carousel-item img { height: 350px; } }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-    <div id="auth-screen" style="position:fixed; inset:0; background:#020617; z-index:9000; display:flex; align-items:center; justify-content:center; flex-direction:column;">
-        <div class="glass-card text-center" style="width: 90%; max-width: 380px;">
-            <img src="./manoj.jpg.jpg" style="width: 90px; height:90px; border-radius: 50%; border: 3px solid var(--primary); margin-bottom: 15px; object-fit:cover;">
-            <h3 class="fw-800 mb-4">MANOJ NEHRA</h3>
+    <!-- AUTH SCREEN -->
+    <div id="auth-screen" style="position:fixed; inset:0; background: url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop') center/cover; z-index:9000; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+        <div style="position:absolute; inset:0; background: rgba(2, 6, 23, 0.85);"></div>
+        
+        <div class="auth-card-3d text-center position-relative" style="width: 90%; max-width: 400px;">
+            <div style="width: 110px; height: 110px; margin: 0 auto 20px; border-radius: 50%; padding: 4px; background: linear-gradient(45deg, var(--primary), var(--secondary)); box-shadow: 0 10px 20px rgba(0,0,0,0.5);">
+                <img src="./manoj.jpg.jpg" style="width: 100%; height:100%; border-radius: 50%; object-fit:cover; border: 3px solid #0f172a;">
+            </div>
+            <h3 class="fw-800 mb-4 text-white" style="letter-spacing: 1px; text-shadow: 0 5px 15px rgba(0,0,0,0.5);">MANOJ NEHRA</h3>
             
             <div id="signup-box">
-                <input type="text" id="su-name" placeholder="Full Name" class="auth-input">
-                <input type="email" id="su-email" placeholder="Email Address" class="auth-input">
-                <input type="password" id="su-pass" placeholder="Password (Min 6 chars)" class="auth-input">
-                <button onclick="doSignup()" class="btn btn-primary w-100 rounded-pill py-2 mt-2 fw-bold">Sign Up</button>
-                <p class="mt-3 small opacity-75">Already have an account? <span onclick="showLogin()" class="text-primary fw-bold cursor-pointer" style="cursor:pointer;">Login Now</span></p>
+                <div class="row g-2">
+                    <div class="col-12"><input type="text" id="su-name" placeholder="Full Name" class="auth-input"></div>
+                    <div class="col-12"><input type="email" id="su-email" placeholder="Email Address" class="auth-input"></div>
+                    <div class="col-6"><input type="number" id="su-phone" placeholder="Mobile No." class="auth-input"></div>
+                    <div class="col-6">
+                        <select id="su-gender" class="auth-input text-secondary">
+                            <option value="" class="bg-dark">Gender</option>
+                            <option value="Male" class="bg-dark">Male</option>
+                            <option value="Female" class="bg-dark">Female</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <select id="su-state" class="auth-input text-secondary">
+                            <option value="" class="bg-dark">Select State</option>
+                            <option value="Rajasthan" class="bg-dark">Rajasthan</option>
+                            <option value="Delhi" class="bg-dark">Delhi</option>
+                            <option value="Haryana" class="bg-dark">Haryana</option>
+                            <option value="Uttar Pradesh" class="bg-dark">Uttar Pradesh</option>
+                            <option value="Bihar" class="bg-dark">Bihar</option>
+                            <option value="Other" class="bg-dark">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-12"><input type="password" id="su-pass" placeholder="Password (Min 6 chars)" class="auth-input"></div>
+                </div>
+                
+                <button onclick="doSignup()" class="btn btn-primary w-100 rounded-pill py-3 mt-2 fw-bold shadow-lg" style="background: linear-gradient(90deg, var(--primary), var(--secondary));">CREATE ACCOUNT</button>
+                <p class="mt-4 small opacity-75">Already have an account? <span onclick="showLogin()" class="text-white fw-bold cursor-pointer text-decoration-underline" style="cursor:pointer;">Login Now</span></p>
             </div>
 
             <div id="login-box" style="display:none;">
                 <input type="email" id="li-email" placeholder="Email Address" class="auth-input">
                 <input type="password" id="li-pass" placeholder="Password" class="auth-input">
-                <button onclick="doLogin()" class="btn btn-success w-100 rounded-pill py-2 mt-2 fw-bold">Login</button>
-                <p class="mt-3 small opacity-75">New user? <span onclick="showSignup()" class="text-success fw-bold cursor-pointer" style="cursor:pointer;">Signup Now</span></p>
+                <button onclick="doLogin()" class="btn btn-success w-100 rounded-pill py-3 mt-3 fw-bold shadow-lg" style="background: linear-gradient(90deg, #10b981, #059669);">SECURE LOGIN</button>
+                <p class="mt-4 small opacity-75">New user? <span onclick="showSignup()" class="text-white fw-bold cursor-pointer text-decoration-underline" style="cursor:pointer;">Create Account</span></p>
             </div>
 
-            <p id="auth-error" class="text-danger mt-3 small" style="display:none;"></p>
-            <button onclick="openPageModal('privacy')" class="btn btn-link text-white small mt-3 opacity-50 text-decoration-none">Privacy Policy</button>
+            <p id="auth-error" class="text-danger mt-3 small fw-bold bg-dark p-2 rounded" style="display:none;"></p>
+            <button onclick="openPageModal('privacy')" class="btn btn-link text-white small mt-3 opacity-50 text-decoration-none">Privacy Policy & Terms</button>
         </div>
     </div>
 
+    <!-- MAIN APP -->
     <div id="main-app" style="display:none;">
         <header class="container pt-4">
             <div class="d-flex align-items-center gap-2">
-                <img src="./manoj.jpg.jpg" style="width:40px; height:40px; border-radius: 50%;">
+                <img src="./manoj.jpg.jpg" style="width:45px; height:45px; border-radius: 50%; border: 2px solid var(--primary);">
                 <div class="d-flex flex-column">
                     <h6 class="fw-bold mb-0">MANOJ NEHRA</h6>
                     <div id="user-display-name" class="small text-info fw-bold" style="font-size: 0.75rem;">Student</div>
@@ -79,15 +134,20 @@
         </header>
 
         <div class="container mt-2">
+            <!-- HOME PAGE -->
             <div id="homePage" class="page active">
                 <div id="homeSlider" class="carousel slide mb-4 rounded-4 shadow" data-bs-ride="carousel"><div class="carousel-inner" id="slider-box"></div></div>
                 <div class="py-3"><h3 class="fw-800">Premium Notes</h3></div>
                 <div id="notesGrid" class="row g-3"></div>
             </div>
+
+            <!-- TEST SERIES PAGE -->
             <div id="testSeriesPage" class="page">
                 <div class="py-3 text-center"><h3 class="fw-800">Online Test Series</h3></div>
                 <div id="testSeriesGrid" class="row g-3"></div>
             </div>
+
+            <!-- LIBRARY PAGE -->
             <div id="purchasePage" class="page pt-3">
                 <h3 class="text-center mb-4">मेरी लाइब्रेरी</h3>
                 <h6 class="text-indigo-500 mb-3"><i class="fas fa-book me-2"></i>खरीदे गए नोट्स</h6>
@@ -95,10 +155,14 @@
                 <h6 class="text-indigo-500 mb-3"><i class="fas fa-edit me-2"></i>खरीदी गई टेस्ट सीरीज</h6>
                 <div id="myTestsGrid"></div>
             </div>
+
+            <!-- PROFILE PAGE -->
             <div id="profilePage" class="page">
                 <div class="glass-card text-center mt-4">
-                    <img id="u-img" src="" class="rounded-circle mb-3 shadow" style="width: 80px; height:80px; border: 3px solid var(--primary); object-fit:cover;">
-                    <h4 id="u-name">Student</h4>
+                    <!-- Updated to Male Icon -->
+                    <img id="u-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="rounded-circle mb-3 shadow" style="width: 100px; height:100px; border: 4px solid var(--primary); background: #fff; padding: 2px;">
+                    <h4 id="u-name" class="fw-bold">Student</h4>
+                    <p id="u-phone-disp" class="small opacity-75 mb-0"></p>
                 </div>
                 <div class="glass-card">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -107,6 +171,7 @@
                     </div>
                     <div class="mb-2"><label class="small opacity-50">Full Name</label><input type="text" id="p-name" class="form-control bg-dark text-white border-secondary" disabled></div>
                     <div class="mb-2"><label class="small opacity-50">Mobile Number</label><input type="number" id="p-phone" class="form-control bg-dark text-white border-secondary" disabled></div>
+                    <div class="mb-2"><label class="small opacity-50">Gender</label><select id="p-gender" class="form-select bg-dark text-white border-secondary" disabled><option>Male</option><option>Female</option></select></div>
                     <div class="mb-3"><label class="small opacity-50">State (India)</label><select id="p-state" class="form-select bg-dark text-white border-secondary" disabled><option value="">Select State</option><option>Rajasthan</option><option>Delhi</option><option>Uttar Pradesh</option><option>Haryana</option><option>Bihar</option><option>Madhya Pradesh</option><option>Punjab</option><option>Gujarat</option><option>Maharashtra</option><option>Other</option></select></div>
                     <button id="btn-save-profile" onclick="saveProfile()" class="btn btn-primary w-100" style="display:none;">Save Changes</button>
                 </div>
@@ -129,6 +194,7 @@
         </nav>
     </div>
 
+    <!-- SUB SCREENS -->
     <div id="testListOverlay" class="p-4">
         <button onclick="closeTestList()" class="btn btn-sm btn-outline-light mb-3"><i class="fa fa-arrow-left"></i> Back</button>
         <div class="stats-header"><div><small class="opacity-75 d-block">Total Series Score</small><h4 id="global-score-text" class="fw-bold mb-0">****</h4></div><button onclick="toggleGlobalScore()" class="btn btn-sm btn-light rounded-pill px-3"><i id="score-toggle-icon" class="fa fa-eye-slash"></i></button></div>
@@ -150,7 +216,21 @@
 
     <div id="result-overlay" class="p-4">
         <button onclick="closeReview()" class="btn btn-sm btn-outline-light mb-4"><i class="fa fa-arrow-left"></i> Home</button>
-        <div class="glass-card text-center mb-3 border-success"><h5 class="text-success fw-bold">RESULT</h5><h1 class="fw-bold display-4" id="res-score">00</h1><p class="small mb-0">Total Score</p></div>
+        
+        <div class="glass-card text-center mb-3 border-success">
+            <h5 class="text-success fw-bold">RESULT</h5>
+            <h1 class="fw-bold display-4" id="res-score">00</h1>
+            <p class="small mb-3">Total Score</p>
+            
+            <!-- NEW STATS GRID -->
+            <div class="row g-2 mt-3">
+                <div class="col-6"><div class="res-stat-box text-success"><span class="res-val" id="res-right">0</span><span class="res-lbl">Right</span></div></div>
+                <div class="col-6"><div class="res-stat-box text-danger"><span class="res-val" id="res-wrong">0</span><span class="res-lbl">Wrong</span></div></div>
+                <div class="col-6"><div class="res-stat-box text-warning"><span class="res-val" id="res-neg">0</span><span class="res-lbl">(-) Marks</span></div></div>
+                <div class="col-6"><div class="res-stat-box text-info"><span class="res-val" id="res-time">0m</span><span class="res-lbl">Time Taken</span></div></div>
+            </div>
+        </div>
+        
         <div class="d-flex gap-2 mb-4"><button onclick="showReviewAnswerKey()" class="btn btn-primary w-100">Review Answers</button></div>
         <h6 class="fw-bold mb-3 text-warning"><i class="fa fa-trophy me-2"></i>Top 15 Students</h6>
         <div class="glass-card p-0 overflow-hidden"><div id="leaderboard-list"><p class="text-center p-3 small opacity-50">Loading ranks...</p></div></div>
@@ -178,9 +258,25 @@
             const name = document.getElementById('su-name').value;
             const email = document.getElementById('su-email').value;
             const pass = document.getElementById('su-pass').value;
-            if(!name || !email || !pass) return Swal.fire('Error', 'Please fill all fields', 'error');
+            const phone = document.getElementById('su-phone').value;
+            const gender = document.getElementById('su-gender').value;
+            const state = document.getElementById('su-state').value;
+
+            if(!name || !email || !pass || !phone || !state || !gender) return Swal.fire('Error', 'Please fill all fields', 'error');
+            
             createUserWithEmailAndPassword(auth, email, pass).then((res) => {
-                updateProfile(res.user, { displayName: name }).then(() => {});
+                updateProfile(res.user, { displayName: name }).then(() => {
+                    // Save detailed profile on signup
+                    set(ref(db, `users/${res.user.uid}/profile`), {
+                        name: name,
+                        email: email,
+                        phone: phone,
+                        gender: gender,
+                        state: state
+                    }).then(() => {
+                        // Profile saved, auth state listener will handle redirection
+                    });
+                });
             }).catch(e => document.getElementById('auth-error').innerText = e.message);
         };
 
@@ -200,7 +296,9 @@
         onAuthStateChanged(auth, user => {
             if (user) {
                 document.getElementById('auth-screen').style.display='none'; document.getElementById('main-app').style.display='block';
-                document.getElementById('u-name').innerText = user.displayName || "Student"; document.getElementById('u-img').src = 'https://i.ibb.co/5GzXk7j/user.png';
+                document.getElementById('u-name').innerText = user.displayName || "Student"; 
+                // Set default male icon
+                document.getElementById('u-img').src = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
                 document.getElementById('user-display-name').innerText = user.displayName || "Student";
                 loadNotes(); loadTestSeries(); loadUserProfile(); loadSlider();
             } else { document.getElementById('auth-screen').style.display='flex'; document.getElementById('main-app').style.display='none'; }
@@ -208,15 +306,30 @@
 
         async function loadUserProfile() {
             const snap = await get(ref(db, `users/${auth.currentUser.uid}/profile`));
-            if(snap.exists()) { const data=snap.val(); document.getElementById('p-name').value=data.name||auth.currentUser.displayName; document.getElementById('p-phone').value=data.phone||""; document.getElementById('p-state').value=data.state||""; } 
+            if(snap.exists()) { 
+                const data=snap.val(); 
+                document.getElementById('p-name').value=data.name||auth.currentUser.displayName; 
+                document.getElementById('p-phone').value=data.phone||""; 
+                document.getElementById('u-phone-disp').innerText = data.phone || "";
+                document.getElementById('p-state').value=data.state||""; 
+                document.getElementById('p-gender').value=data.gender||"Male";
+            } 
             else { document.getElementById('p-name').value=auth.currentUser.displayName; }
         }
-        window.toggleProfileEdit = () => { const inputs=['p-name','p-phone','p-state']; const dis=document.getElementById('p-name').disabled; inputs.forEach(id=>document.getElementById(id).disabled=!dis); document.getElementById('btn-save-profile').style.display=dis?'block':'none'; document.getElementById('btn-edit-profile').innerHTML=dis?'<i class="fa fa-times"></i> Cancel':'<i class="fa fa-pencil"></i> Edit'; };
+        
+        window.toggleProfileEdit = () => { const inputs=['p-name','p-phone','p-state', 'p-gender']; const dis=document.getElementById('p-name').disabled; inputs.forEach(id=>document.getElementById(id).disabled=!dis); document.getElementById('btn-save-profile').style.display=dis?'block':'none'; document.getElementById('btn-edit-profile').innerHTML=dis?'<i class="fa fa-times"></i> Cancel':'<i class="fa fa-pencil"></i> Edit'; };
+        
         window.saveProfile = async () => {
-            const data={ name:document.getElementById('p-name').value, phone:document.getElementById('p-phone').value, state:document.getElementById('p-state').value };
+            const data={ 
+                name:document.getElementById('p-name').value, 
+                phone:document.getElementById('p-phone').value, 
+                state:document.getElementById('p-state').value,
+                gender:document.getElementById('p-gender').value
+            };
             if(!data.phone||!data.state) return Swal.fire('Error','Please fill all','warning');
             await set(ref(db, `users/${auth.currentUser.uid}/profile`), data); window.toggleProfileEdit(); Swal.fire('Success','Updated','success');
         };
+
         window.openPageModal = async (type) => { document.getElementById('page-overlay').style.display='flex'; document.getElementById('page-title').innerText=type==='privacy'?"Privacy":"About Us"; const snap=await get(ref(db, `appPages/${type}`)); document.getElementById('page-body').innerHTML=snap.val()||"Loading..."; };
         window.toggleGlobalScore = () => { globalScoreHidden=!globalScoreHidden; document.getElementById('global-score-text').innerText=globalScoreHidden?"****":lastFetchedTotalScore.toFixed(2); document.getElementById('score-toggle-icon').className=globalScoreHidden?"fa fa-eye-slash":"fa fa-eye"; };
         
@@ -250,9 +363,7 @@
             await set(ref(db, `users/${auth.currentUser.uid}/totalScore`), lastFetchedTotalScore);
             const b=document.getElementById('test-list-container'); b.innerHTML="";
             
-            // === FIXED LOGIC FOR TEST LIST DISPLAY ===
             t.forEach((item,i)=>{ 
-                // Determine Title and Count based on JSON format (Array vs Object)
                 let setName = `Test ${i+1}`;
                 let qCount = 0;
                 if(item.questions && Array.isArray(item.questions)) {
@@ -276,17 +387,14 @@
             curPos=parseFloat(s.posMarks)||1; 
             curRatio=parseFloat(s.negRatio)||3; 
             
-            // === FIXED LOGIC FOR QUESTION EXTRACTION ===
             let dm=parseInt(s.duration)||60;
             const rawQuestions = JSON.parse(s.questions);
             const selectedSet = rawQuestions[idx];
 
             if(selectedSet.questions && Array.isArray(selectedSet.questions)) {
-                // It's the new format (Object with name/questions)
                 currentExamQs = selectedSet.questions;
                 if(selectedSet.duration) dm = parseInt(selectedSet.duration);
             } else {
-                // It's the old format (Just Array)
                 currentExamQs = selectedSet;
             }
 
@@ -314,13 +422,39 @@
 
         window.finishExam = async () => {
             trackTime(); clearInterval(examTimer); document.getElementById('exam-overlay').style.display='none';
-            let c=0, w=0; currentExamQs.forEach((q,i)=>{ if(userAnswers[i]===(q.ans||q.answer)) c++; else if(userAnswers[i]) w++; });
-            let ded=(w*(curPos/curRatio)); let tot=(c*curPos)-ded;
+            
+            let c=0, w=0; 
+            currentExamQs.forEach((q,i)=>{ if(userAnswers[i]===(q.ans||q.answer)) c++; else if(userAnswers[i]) w++; });
+            
+            let ded=(w*(curPos/curRatio)); 
+            let tot=(c*curPos)-ded;
+            let totalTimeSec = questionDurations.reduce((a,b)=>a+b, 0);
+            let timeFmt = `${Math.floor(totalTimeSec/60)}m ${Math.floor(totalTimeSec%60)}s`;
+
             await set(ref(db, `users/${auth.currentUser.uid}/testResults/${activeSeriesId}/${activeTestIdx}`), tot);
-            document.getElementById('res-score').innerText=tot.toFixed(2); document.getElementById('result-overlay').style.display='block'; document.getElementById('review-container').style.display='none'; loadLeaderboard();
+            
+            // UPDATE RESULT UI WITH NEW FIELDS
+            document.getElementById('res-score').innerText=tot.toFixed(2);
+            document.getElementById('res-right').innerText = c;
+            document.getElementById('res-wrong').innerText = w;
+            document.getElementById('res-neg').innerText = ded.toFixed(2);
+            document.getElementById('res-time').innerText = timeFmt;
+
+            document.getElementById('result-overlay').style.display='block'; document.getElementById('review-container').style.display='none'; loadLeaderboard();
         };
 
-        function loadLeaderboard() { const l=document.getElementById('leaderboard-list'); onValue(query(ref(db,'users'),orderByChild('totalScore'),limitToLast(15)), s=>{ l.innerHTML=""; let u=[]; s.forEach(c=>u.push({n:c.val().profile?.name||"User",s:c.val().totalScore||0})); u.reverse().forEach((x,i)=>l.innerHTML+=`<div class="rank-row"><div class="d-flex gap-3"><span class="rank-num">#${i+1}</span><span>${x.n}</span></div><span class="text-warning fw-bold">${x.s.toFixed(1)}</span></div>`); }); }
+        function loadLeaderboard() { 
+            const l=document.getElementById('leaderboard-list'); 
+            onValue(query(ref(db,'users'),orderByChild('totalScore'),limitToLast(15)), s=>{ 
+                l.innerHTML=""; let u=[]; 
+                s.forEach(c=>u.push({
+                    // Ensure we get name from profile if available, else standard fallback
+                    n:c.val().profile?.name || c.val().displayName || "User", 
+                    s:c.val().totalScore||0
+                })); 
+                u.reverse().forEach((x,i)=>l.innerHTML+=`<div class="rank-row"><div class="d-flex gap-3"><span class="rank-num">#${i+1}</span><span>${x.n}</span></div><span class="text-warning fw-bold">${x.s.toFixed(1)}</span></div>`); 
+            }); 
+        }
 
         window.showReviewAnswerKey = () => {
             const b=document.getElementById('review-container'); b.innerHTML="";
