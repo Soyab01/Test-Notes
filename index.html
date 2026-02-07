@@ -20,7 +20,24 @@
         .glass-card { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.15); border-radius: 25px; padding: 22px; margin-bottom: 18px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); transition: transform 0.3s; }
         .glass-card:active { transform: scale(0.98); }
         
-        /* 3D Login Specific */
+        /* RESPONSIVE AUTH SCREEN FIXES */
+        #auth-screen {
+            position: fixed; inset: 0; 
+            background: url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat fixed;
+            z-index: 9000;
+            overflow-y: auto; /* Enables Scrolling */
+        }
+        .auth-overlay { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.85); z-index: -1; }
+        
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 15px; /* Padding for mobile scroll */
+        }
+
         .auth-card-3d {
             background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(40px);
@@ -29,11 +46,12 @@
             box-shadow: 20px 20px 50px rgba(0,0,0,0.5), -5px -5px 30px rgba(255,255,255,0.05);
             border-radius: 30px;
             padding: 30px;
+            width: 100%;
+            max-width: 400px;
             transform-style: preserve-3d;
             perspective: 1000px;
-            animation: float 6s ease-in-out infinite;
+            /* Float animation removed for better mobile typing experience */
         }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
 
         .nav-dock { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; background: rgba(15, 23, 42, 0.95); border-radius: 30px; display: flex; justify-content: space-around; padding: 10px 5px; z-index: 8000; border: 1px solid rgba(255,255,255,0.15); }
         .nav-link-3d { color: rgba(255,255,255,0.4); text-decoration: none; text-align: center; flex: 1; font-size: 0.7rem; cursor: pointer; }
@@ -68,55 +86,56 @@
 </head>
 <body oncontextmenu="return false;">
 
-    <!-- AUTH SCREEN -->
-    <div id="auth-screen" style="position:fixed; inset:0; background: url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop') center/cover; z-index:9000; display:flex; align-items:center; justify-content:center; flex-direction:column;">
-        <div style="position:absolute; inset:0; background: rgba(2, 6, 23, 0.85);"></div>
-        
-        <div class="auth-card-3d text-center position-relative" style="width: 90%; max-width: 400px;">
-            <div style="width: 110px; height: 110px; margin: 0 auto 20px; border-radius: 50%; padding: 4px; background: linear-gradient(45deg, var(--primary), var(--secondary)); box-shadow: 0 10px 20px rgba(0,0,0,0.5);">
-                <img src="./Manoj 2.png" style="width: 100%; height:100%; border-radius: 50%; object-fit:cover; border: 3px solid #0f172a;">
-            </div>
-            <h3 class="fw-800 mb-4 text-white" style="letter-spacing: 1px; text-shadow: 0 5px 15px rgba(0,0,0,0.5);">MANOJ NEHRA</h3>
-            
-            <div id="signup-box">
-                <div class="row g-2">
-                    <div class="col-12"><input type="text" id="su-name" placeholder="Full Name" class="auth-input"></div>
-                    <div class="col-12"><input type="email" id="su-email" placeholder="Email Address" class="auth-input"></div>
-                    <div class="col-6"><input type="number" id="su-phone" placeholder="Mobile No." class="auth-input"></div>
-                    <div class="col-6">
-                        <select id="su-gender" class="auth-input text-secondary">
-                            <option value="" class="bg-dark">Gender</option>
-                            <option value="Male" class="bg-dark">Male</option>
-                            <option value="Female" class="bg-dark">Female</option>
-                        </select>
-                    </div>
-                    <div class="col-12">
-                        <select id="su-state" class="auth-input text-secondary">
-                            <option value="" class="bg-dark">Select State</option>
-                            <option value="Rajasthan" class="bg-dark">Rajasthan</option>
-                            <option value="Delhi" class="bg-dark">Delhi</option>
-                            <option value="Haryana" class="bg-dark">Haryana</option>
-                            <option value="Uttar Pradesh" class="bg-dark">Uttar Pradesh</option>
-                            <option value="Bihar" class="bg-dark">Bihar</option>
-                            <option value="Other" class="bg-dark">Other</option>
-                        </select>
-                    </div>
-                    <div class="col-12"><input type="password" id="su-pass" placeholder="Password (Min 6 chars)" class="auth-input"></div>
+    <!-- UPDATED AUTH SCREEN (Scrollable & Responsive) -->
+    <div id="auth-screen">
+        <div class="auth-overlay"></div>
+        <div class="auth-container">
+            <div class="auth-card-3d text-center position-relative">
+                <div style="width: 110px; height: 110px; margin: 0 auto 20px; border-radius: 50%; padding: 4px; background: linear-gradient(45deg, var(--primary), var(--secondary)); box-shadow: 0 10px 20px rgba(0,0,0,0.5);">
+                    <img src="./Manoj 2.png" style="width: 100%; height:100%; border-radius: 50%; object-fit:cover; border: 3px solid #0f172a;">
                 </div>
+                <h3 class="fw-800 mb-4 text-white" style="letter-spacing: 1px; text-shadow: 0 5px 15px rgba(0,0,0,0.5);">MANOJ NEHRA</h3>
                 
-                <button onclick="doSignup()" class="btn btn-primary w-100 rounded-pill py-3 mt-2 fw-bold shadow-lg" style="background: linear-gradient(90deg, var(--primary), var(--secondary));">CREATE ACCOUNT</button>
-                <p class="mt-4 small opacity-75">Already have an account? <span onclick="showLogin()" class="text-white fw-bold cursor-pointer text-decoration-underline" style="cursor:pointer;">Login Now</span></p>
-            </div>
+                <div id="signup-box">
+                    <div class="row g-2">
+                        <div class="col-12"><input type="text" id="su-name" placeholder="Full Name" class="auth-input"></div>
+                        <div class="col-12"><input type="email" id="su-email" placeholder="Email Address" class="auth-input"></div>
+                        <div class="col-6"><input type="number" id="su-phone" placeholder="Mobile No." class="auth-input"></div>
+                        <div class="col-6">
+                            <select id="su-gender" class="auth-input text-secondary">
+                                <option value="" class="bg-dark">Gender</option>
+                                <option value="Male" class="bg-dark">Male</option>
+                                <option value="Female" class="bg-dark">Female</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <select id="su-state" class="auth-input text-secondary">
+                                <option value="" class="bg-dark">Select State</option>
+                                <option value="Rajasthan" class="bg-dark">Rajasthan</option>
+                                <option value="Delhi" class="bg-dark">Delhi</option>
+                                <option value="Haryana" class="bg-dark">Haryana</option>
+                                <option value="Uttar Pradesh" class="bg-dark">Uttar Pradesh</option>
+                                <option value="Bihar" class="bg-dark">Bihar</option>
+                                <option value="Other" class="bg-dark">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-12"><input type="password" id="su-pass" placeholder="Password (Min 6 chars)" class="auth-input"></div>
+                    </div>
+                    
+                    <button onclick="doSignup()" class="btn btn-primary w-100 rounded-pill py-3 mt-2 fw-bold shadow-lg" style="background: linear-gradient(90deg, var(--primary), var(--secondary));">CREATE ACCOUNT</button>
+                    <p class="mt-4 small opacity-75">Already have an account? <span onclick="showLogin()" class="text-white fw-bold cursor-pointer text-decoration-underline" style="cursor:pointer;">Login Now</span></p>
+                </div>
 
-            <div id="login-box" style="display:none;">
-                <input type="email" id="li-email" placeholder="Email Address" class="auth-input">
-                <input type="password" id="li-pass" placeholder="Password" class="auth-input">
-                <button onclick="doLogin()" class="btn btn-success w-100 rounded-pill py-3 mt-3 fw-bold shadow-lg" style="background: linear-gradient(90deg, #10b981, #059669);">SECURE LOGIN</button>
-                <p class="mt-4 small opacity-75">New user? <span onclick="showSignup()" class="text-white fw-bold cursor-pointer text-decoration-underline" style="cursor:pointer;">Create Account</span></p>
-            </div>
+                <div id="login-box" style="display:none;">
+                    <input type="email" id="li-email" placeholder="Email Address" class="auth-input">
+                    <input type="password" id="li-pass" placeholder="Password" class="auth-input">
+                    <button onclick="doLogin()" class="btn btn-success w-100 rounded-pill py-3 mt-3 fw-bold shadow-lg" style="background: linear-gradient(90deg, #10b981, #059669);">SECURE LOGIN</button>
+                    <p class="mt-4 small opacity-75">New user? <span onclick="showSignup()" class="text-white fw-bold cursor-pointer text-decoration-underline" style="cursor:pointer;">Create Account</span></p>
+                </div>
 
-            <p id="auth-error" class="text-danger mt-3 small fw-bold bg-dark p-2 rounded" style="display:none;"></p>
-            <button onclick="openPageModal('privacy')" class="btn btn-link text-white small mt-3 opacity-50 text-decoration-none">Privacy Policy & Terms</button>
+                <p id="auth-error" class="text-danger mt-3 small fw-bold bg-dark p-2 rounded" style="display:none;"></p>
+                <button onclick="openPageModal('privacy')" class="btn btn-link text-white small mt-3 opacity-50 text-decoration-none">Privacy Policy & Terms</button>
+            </div>
         </div>
     </div>
 
@@ -300,7 +319,7 @@
                 document.getElementById('u-img').src = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
                 document.getElementById('user-display-name').innerText = user.displayName || "Student";
                 loadNotes(); loadTestSeries(); loadUserProfile(); loadSlider();
-            } else { document.getElementById('auth-screen').style.display='flex'; document.getElementById('main-app').style.display='none'; }
+            } else { document.getElementById('auth-screen').style.display='block'; document.getElementById('main-app').style.display='none'; }
         });
 
         async function loadUserProfile() {
@@ -469,6 +488,12 @@
 
             await set(ref(db, `users/${auth.currentUser.uid}/testResults/${activeSeriesId}/${activeTestIdx}`), tot);
             
+            // Write Total Score for Leaderboard
+            const p=await get(ref(db, `users/${auth.currentUser.uid}/testResults/${activeSeriesId}`));
+            const r=p.exists()?p.val():{};
+            const newSeriesTotal=Object.values(r).reduce((a,b)=>a+b,0);
+            await set(ref(db, `users/${auth.currentUser.uid}/totalScore`), newSeriesTotal);
+
             // UPDATE RESULT UI WITH NEW FIELDS
             document.getElementById('res-score').innerText=tot.toFixed(2);
             document.getElementById('res-right').innerText = c;
@@ -479,16 +504,29 @@
             document.getElementById('result-overlay').style.display='block'; document.getElementById('review-container').style.display='none'; loadLeaderboard();
         };
 
+        // CORRECTED LEADERBOARD LOGIC
         function loadLeaderboard() { 
             const l=document.getElementById('leaderboard-list'); 
             onValue(query(ref(db,'users'),orderByChild('totalScore'),limitToLast(15)), s=>{ 
-                l.innerHTML=""; let u=[]; 
-                s.forEach(c=>u.push({
-                    // Ensure we get name from profile if available, else standard fallback
-                    n:c.val().profile?.name || c.val().displayName || "User", 
-                    s:c.val().totalScore||0
-                })); 
-                u.reverse().forEach((x,i)=>l.innerHTML+=`<div class="rank-row"><div class="d-flex gap-3"><span class="rank-num">#${i+1}</span><span>${x.n}</span></div><span class="text-warning fw-bold">${x.s.toFixed(1)}</span></div>`); 
+                l.innerHTML=""; 
+                let u=[]; 
+                s.forEach(c=> {
+                    const val = c.val();
+                    // Get Correct Name: Profile Name > Display Name > "User"
+                    let realName = "User";
+                    if(val.profile && val.profile.name) realName = val.profile.name;
+                    else if(val.displayName) realName = val.displayName;
+
+                    u.push({
+                        n: realName, 
+                        s: val.totalScore||0
+                    });
+                }); 
+                
+                // Firebase sends ascending (Low to High), so Reverse it
+                u.reverse().forEach((x,i)=> {
+                    l.innerHTML+=`<div class="rank-row"><div class="d-flex gap-3"><span class="rank-num">#${i+1}</span><span>${x.n}</span></div><span class="text-warning fw-bold">${x.s.toFixed(1)}</span></div>`; 
+                });
             }); 
         }
 
