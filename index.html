@@ -1,4 +1,3 @@
-<!-- START OF FILE Paste February 06, 2026 - 2:25AM -->
 <!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -357,25 +356,62 @@
         window.openTestList = async (id, title) => {
             activeSeriesId=id; document.getElementById('testListOverlay').style.display='flex'; document.getElementById('current-series-title').innerText=title;
             const s=await get(ref(db, `testSeries/${id}`)); 
-            const t=JSON.parse(s.val().questions||"[]");
+            
+            // Fix 1: Handle Multi-Test JSON
+            let t=[];
+            try { t = JSON.parse(s.val().questions||"[]"); } catch(e){ t=[]; }
+
             const p=await get(ref(db, `users/${auth.currentUser.uid}/testResults/${id}`)); const r=p.exists()?p.val():{};
             lastFetchedTotalScore=Object.values(r).reduce((a,b)=>a+b,0); if(!globalScoreHidden) document.getElementById('global-score-text').innerText=lastFetchedTotalScore.toFixed(2);
             await set(ref(db, `users/${auth.currentUser.uid}/totalScore`), lastFetchedTotalScore);
             const b=document.getElementById('test-list-container'); b.innerHTML="";
             
             t.forEach((item,i)=>{ 
-                let setName = `Test ${i+1}`;
-                let qCount = 0;
-                if(item.questions && Array.isArray(item.questions)) {
-                    setName = item.name || setName;
-                    qCount = item.questions.length;
-                } else {
-                    qCount = item.length;
+                // Display Name and Count
+                let setName = item.name || `Test ${i+1}`;
+                let qCount = item.questions ? item.questions.length : item.length;
+
+                // Fix 2: Date Locking Logic
+                let lockLabel = "";
+                let isTimeLocked = false;
+                if(item.unlockDate){
+                    const uDate = new Date(item.unlockDate);
+                    if(new Date() < uDate){
+                        isTimeLocked = true;
+                        // Format: 12/05 10:30
+                        lockLabel = `Opens: ${uDate.getDate()}/${uDate.getMonth()+1} ${uDate.getHours()}:${uDate.getMinutes()<10?'0':''}${uDate.getMinutes()}`;
+                    }
                 }
 
-                const c=r[i]!==undefined; 
-                const l=i>0&&r[i-1]===undefined; 
-                b.innerHTML+=`<div class="glass-card d-flex justify-content-between align-items-center ${l?'lock-icon':''}"><div><b>${setName}</b><br><small>${qCount} Qns ${c?`| Score: ${r[i].toFixed(1)}`:''}</small></div><button class="btn ${l?'btn-secondary':'btn-primary'} btn-sm rounded-pill" onclick="${l?'':`startExamNow('${id}',${i})`}" ${l?'disabled':''}>${c?'RETEST':(l?'LOCK':'START')}</button></div>`; 
+                // Sequential Locking
+                const isCompleted=r[i]!==undefined; 
+                const isSeqLocked=i>0&&r[i-1]===undefined; 
+                
+                // Determine Button State
+                let btnTxt = "START";
+                let btnCls = "btn-primary";
+                let disabledAttr = "";
+
+                if(isTimeLocked){
+                    btnTxt = lockLabel;
+                    btnCls = "btn-secondary";
+                    disabledAttr = "disabled";
+                } else if(isCompleted) {
+                    btnTxt = "RETEST";
+                } else if(isSeqLocked) {
+                    btnTxt = "LOCKED";
+                    btnCls = "btn-secondary";
+                    disabledAttr = "disabled";
+                }
+
+                b.innerHTML+=`
+                <div class="glass-card d-flex justify-content-between align-items-center ${(isSeqLocked||isTimeLocked)?'lock-icon':''}">
+                    <div>
+                        <b>${setName}</b><br>
+                        <small>${qCount} Qns ${isCompleted?`| Score: ${r[i].toFixed(1)}`:''}</small>
+                    </div>
+                    <button class="btn ${btnCls} btn-sm rounded-pill" onclick="${disabledAttr?'':`startExamNow('${id}',${i})`}" ${disabledAttr}>${btnTxt}</button>
+                </div>`; 
             });
         };
         window.closeTestList=()=>document.getElementById('testListOverlay').style.display='none';
