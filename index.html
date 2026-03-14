@@ -457,7 +457,7 @@
             if(!auth.currentUser) return;
             const snap = await get(ref(db, `users/${auth.currentUser.uid}/purchases/notes`)); const p = snap.exists() ? snap.val() : {};
             const n =[{id:"note1", title:"Raj. Police Notes", price:99, file:"raj.pdf"}, {id:"note2", title:"Patwari Notes", price:149, file:"patwari.pdf"}];
-            let h='', lib=''; n.forEach(x => { const pd=p[x.id]?.paid; h+=`<div class="col-12"><div class="glass-card d-flex justify-content-between align-items-center"><h6>${x.title}</h6><button class="btn" onclick="${pd?`openReader('${x.file}')`:`buyNote('${x.id}',${x.price})`}">${pd?'Open':'₹'+x.price}</button></div></div>`; if(pd) lib+=`<div class="glass-card d-flex justify-content-between align-items-center"><h6>${x.title}</h6><button class="btn btn-sm" onclick="openReader('${x.file}')">OPEN</button></div>`; });
+            let h='', lib=''; n.forEach(x => { const pd=p[x.id]?.paid; h+=`<div class="col-12"><div class="glass-card d-flex justify-content-between align-items-center"><h6>${x.title}</h6><button class="btn" onclick="${pd?`openReader('${x.file}')`:`buyNote('${x.id}',${x.price}, '${x.title}')`}">${pd?'Open':'₹'+x.price}</button></div></div>`; if(pd) lib+=`<div class="glass-card d-flex justify-content-between align-items-center"><h6>${x.title}</h6><button class="btn btn-sm" onclick="openReader('${x.file}')">OPEN</button></div>`; });
             document.getElementById('notesGrid').innerHTML=h; document.getElementById('myNotesGrid').innerHTML=lib||'<small class="text-secondary">No notes purchased</small>';
         }
 
@@ -501,25 +501,58 @@
             if(s.exists()&&s.val().paid) {
                 openTestList(id,ti); 
             } else {
-                buyTest(id,pr); 
+                buyTest(id, pr, ti); 
             }
         };
         
-        window.buyNote=(id,p)=>{ new Razorpay({key:"rzp_live_Ry7zglI0OnE1Jo", amount:p*100, name:"Manoj", handler:async()=>{ await set(ref(db,`users/${auth.currentUser.uid}/purchases/notes/${id}`),{paid:true}); loadNotes(); }}).open(); };
+        window.buyNote = (id, p, ti) => { 
+            new Razorpay({
+                key: "rzp_live_Ry7zglI0OnE1Jo", 
+                amount: p * 100, 
+                name: "Manoj Nehra",
+                description: ti || "Premium Notes",
+                handler: async () => { 
+                    await set(ref(db,`users/${auth.currentUser.uid}/purchases/notes/${id}`),{paid:true}); 
+                    loadNotes(); 
+                    Swal.fire('Success', 'Payment Successful!', 'success');
+                },
+                config: {
+                    display: {
+                        blocks: { upi: { name: "Pay with GPay / PhonePe", instruments: [{ method: "upi" }] }, other: { name: "Other Methods", instruments:[{ method: "card" }, { method: "netbanking" }, { method: "wallet" }] } },
+                        sequence:["block.upi", "block.other"],
+                        preferences: { show_default_blocks: false }
+                    }
+                }
+            }).open(); 
+        };
         
-        window.buyTest = (id, p) => { 
+        window.buyTest = (id, p, ti) => { 
             // FINAL SAFETY NET: IF RAZORPAY TRIES TO OPEN WITH AMOUNT 0, AUTO UNLOCK IT
             if(Number(p) === 0) {
-                set(ref(db,`users/${auth.currentUser.uid}/purchases/tests/${id}`),{paid:true}).then(() => loadTestSeries());
+                set(ref(db,`users/${auth.currentUser.uid}/purchases/tests/${id}`),{paid:true}).then(() => {
+                    loadTestSeries();
+                    openTestList(id, ti);
+                });
                 return;
             }
             new Razorpay({
                 key: "rzp_live_Ry7zglI0OnE1Jo", 
                 amount: p * 100, 
-                name: "Manoj", 
+                name: "Manoj Nehra", 
+                description: ti || "Test Series",
                 handler: async () => { 
                     await set(ref(db,`users/${auth.currentUser.uid}/purchases/tests/${id}`), {paid:true}); 
                     loadTestSeries(); 
+                    Swal.fire('Success', 'Payment Successful! Test Unlocked.', 'success').then(() => {
+                        openTestList(id, ti);
+                    });
+                },
+                config: {
+                    display: {
+                        blocks: { upi: { name: "Pay with GPay / PhonePe", instruments: [{ method: "upi" }] }, other: { name: "Other Methods", instruments:[{ method: "card" }, { method: "netbanking" }, { method: "wallet" }] } },
+                        sequence:["block.upi", "block.other"],
+                        preferences: { show_default_blocks: false }
+                    }
                 }
             }).open(); 
         };
@@ -582,13 +615,14 @@
                     btnStyle = "background: #94a3b8 !important; opacity:0.7;";
                 }
 
+                // FIXED CENTERING OF RETEST BUTTON USING FLEX-SHRINK AND MIN-WIDTH
                 b.innerHTML+=`
                 <div class="glass-card d-flex justify-content-between align-items-center ${(isSeqLocked||isTimeLocked)?'lock-icon':''}">
                     <div>
                         <b>${setName}</b><br>
                         <small>${qCount} Qns ${isCompleted?`| Score: ${r[i].toFixed(1)}`:''}</small>
                     </div>
-                    <button class="${btnCls} btn-sm rounded-pill" style="${btnStyle}" onclick="${disabledAttr?'':`startExamNow('${id}',${i})`}" ${disabledAttr}>${btnTxt}</button>
+                    <button class="${btnCls} btn-sm rounded-pill text-nowrap flex-shrink-0 px-3" style="${btnStyle} min-width: 85px; text-align: center;" onclick="${disabledAttr?'':`startExamNow('${id}',${i})`}" ${disabledAttr}>${btnTxt}</button>
                 </div>`; 
             });
         };
