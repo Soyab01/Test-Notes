@@ -362,7 +362,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, set, get, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, get, onValue, query, orderByChild, limitToLast, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = { apiKey: "AIzaSyAhg7hKJ123JRAfio7fymK543XpuNonMHo", authDomain: "showpdf-ffa34.firebaseapp.com", databaseURL: "https://showpdf-ffa34-default-rtdb.firebaseio.com", projectId: "showpdf-ffa34", storageBucket: "showpdf-ffa34.appspot.com" };
         const app = initializeApp(firebaseConfig);
@@ -410,6 +410,7 @@
         window.logout = () => signOut(auth).then(() => location.reload());
 
         let currentExamQs=[], userAnswers=[], qIdx=0, examTimer, curPos=1, curRatio=3, activeSeriesId="", activeTestIdx=0, globalScoreHidden=true, lastFetchedTotalScore=0, questionDurations=[], lastQTime=0;
+        let currentActiveRef = null;
 
         onAuthStateChanged(auth, user => {
             if (user) {
@@ -455,24 +456,86 @@
         async function loadNotes() {
             if(!auth.currentUser) return;
             const snap = await get(ref(db, `users/${auth.currentUser.uid}/purchases/notes`)); const p = snap.exists() ? snap.val() : {};
-            const n = [{id:"note1", title:"Raj. Police Notes", price:99, file:"raj.pdf"}, {id:"note2", title:"Patwari Notes", price:149, file:"patwari.pdf"}];
+            const n =[{id:"note1", title:"Raj. Police Notes", price:99, file:"raj.pdf"}, {id:"note2", title:"Patwari Notes", price:149, file:"patwari.pdf"}];
             let h='', lib=''; n.forEach(x => { const pd=p[x.id]?.paid; h+=`<div class="col-12"><div class="glass-card d-flex justify-content-between align-items-center"><h6>${x.title}</h6><button class="btn" onclick="${pd?`openReader('${x.file}')`:`buyNote('${x.id}',${x.price})`}">${pd?'Open':'₹'+x.price}</button></div></div>`; if(pd) lib+=`<div class="glass-card d-flex justify-content-between align-items-center"><h6>${x.title}</h6><button class="btn btn-sm" onclick="openReader('${x.file}')">OPEN</button></div>`; });
             document.getElementById('notesGrid').innerHTML=h; document.getElementById('myNotesGrid').innerHTML=lib||'<small class="text-secondary">No notes purchased</small>';
         }
+
         function loadTestSeries() {
             if(!auth.currentUser) return;
-            onValue(ref(db, 'testSeries'), async s => { const d=s.val(); if(!d) return;
-                const pSnap = await get(ref(db, `users/${auth.currentUser.uid}/purchases/tests`)); const p=pSnap.exists()?pSnap.val():{};
-                const g=document.getElementById('testSeriesGrid'); g.innerHTML=""; const l=document.getElementById('myTestsGrid'); l.innerHTML="";
-                Object.keys(d).forEach(k => { const x=d[k]; const pd=p[k]?.paid; g.innerHTML+=`<div class="col-6 col-md-4"><div class="glass-card text-center p-2"><img src="${x.image}" class="test-card-img"><h6 class="small fw-bold">${x.title}</h6><button onclick="handleTestAction('${k}',${x.price},'${x.title}')" class="btn w-100 mt-2">${pd?'Open':'₹'+x.price}</button></div></div>`; if(pd) l.innerHTML+=`<div class="glass-card d-flex justify-content-between align-items-center"><h6>${x.title}</h6><button onclick="openTestList('${k}','${x.title}')" class="btn btn-sm">VIEW</button></div>`; });
+            onValue(ref(db, 'testSeries'), async s => { 
+                const d=s.val(); 
+                if(!d) return;
+                
+                const pSnap = await get(ref(db, `users/${auth.currentUser.uid}/purchases/tests`)); 
+                const p=pSnap.exists()?pSnap.val():{};
+                
+                const g=document.getElementById('testSeriesGrid'); g.innerHTML=""; 
+                const l=document.getElementById('myTestsGrid'); l.innerHTML="";
+                
+                Object.keys(d).forEach(k => { 
+                    const x = d[k]; 
+                    
+                    // SAFETY NET FOR FREE CHECK
+                    const pVal = Number(x.price) || 0; 
+                    const isFree = (x.isFree === true || String(x.isFree) === "true" || pVal === 0);
+                    const pd = p[k]?.paid || isFree;
+                    
+                    let btnText = '₹ ' + pVal;
+                    if(isFree) btnText = 'Free Test';
+                    else if(pd) btnText = 'Open';
+
+                    g.innerHTML+=`<div class="col-6 col-md-4"><div class="glass-card text-center p-2"><img src="${x.image}" class="test-card-img"><h6 class="small fw-bold">${x.title}</h6><button onclick="handleTestAction('${k}',${pVal},'${x.title}', ${isFree})" class="btn w-100 mt-2">${btnText}</button></div></div>`; 
+                    
+                    if(p[k]?.paid) l.innerHTML+=`<div class="glass-card d-flex justify-content-between align-items-center"><h6>${x.title}</h6><button onclick="openTestList('${k}','${x.title}')" class="btn btn-sm">VIEW</button></div>`; 
+                });
             }); 
         }
-        window.handleTestAction = async (id,pr,ti) => { const s=await get(ref(db, `users/${auth.currentUser.uid}/purchases/tests/${id}`)); if(s.exists()&&s.val().paid) openTestList(id,ti); else buyTest(id,pr); };
+        
+        window.handleTestAction = async (id, pr, ti, isFree) => { 
+            // DOUBLE SAFETY NET: IF PRICE IS 0 OR isFree IS TRUE, OPEN DIRECTLY
+            if(isFree === true || String(isFree) === "true" || Number(pr) === 0) {
+                return openTestList(id, ti);
+            }
+            const s=await get(ref(db, `users/${auth.currentUser.uid}/purchases/tests/${id}`)); 
+            if(s.exists()&&s.val().paid) {
+                openTestList(id,ti); 
+            } else {
+                buyTest(id,pr); 
+            }
+        };
+        
         window.buyNote=(id,p)=>{ new Razorpay({key:"rzp_live_Ry7zglI0OnE1Jo", amount:p*100, name:"Manoj", handler:async()=>{ await set(ref(db,`users/${auth.currentUser.uid}/purchases/notes/${id}`),{paid:true}); loadNotes(); }}).open(); };
-        window.buyTest=(id,p)=>{ new Razorpay({key:"rzp_live_Ry7zglI0OnE1Jo", amount:p*100, name:"Manoj", handler:async()=>{ await set(ref(db,`users/${auth.currentUser.uid}/purchases/tests/${id}`),{paid:true}); loadTestSeries(); }}).open(); };
+        
+        window.buyTest = (id, p) => { 
+            // FINAL SAFETY NET: IF RAZORPAY TRIES TO OPEN WITH AMOUNT 0, AUTO UNLOCK IT
+            if(Number(p) === 0) {
+                set(ref(db,`users/${auth.currentUser.uid}/purchases/tests/${id}`),{paid:true}).then(() => loadTestSeries());
+                return;
+            }
+            new Razorpay({
+                key: "rzp_live_Ry7zglI0OnE1Jo", 
+                amount: p * 100, 
+                name: "Manoj", 
+                handler: async () => { 
+                    await set(ref(db,`users/${auth.currentUser.uid}/purchases/tests/${id}`), {paid:true}); 
+                    loadTestSeries(); 
+                }
+            }).open(); 
+        };
 
         window.openTestList = async (id, title) => {
             activeSeriesId=id; document.getElementById('testListOverlay').style.display='flex'; document.getElementById('current-series-title').innerText=title;
+            
+            // TRACK VIEWS AND ACTIVE USERS
+            const vRef = ref(db, `testSeries/${id}/views`);
+            get(vRef).then(snap => set(vRef, (snap.val() || 0) + 1));
+
+            if(currentActiveRef) remove(currentActiveRef);
+            currentActiveRef = ref(db, `testSeries/${id}/activeUsers/${auth.currentUser.uid}`);
+            set(currentActiveRef, true);
+            onDisconnect(currentActiveRef).remove();
+
             const s=await get(ref(db, `testSeries/${id}`)); 
             
             let t=[];
@@ -529,7 +592,10 @@
                 </div>`; 
             });
         };
-        window.closeTestList=()=>document.getElementById('testListOverlay').style.display='none';
+        window.closeTestList=(keepActive)=>{ 
+            document.getElementById('testListOverlay').style.display='none'; 
+            if(keepActive !== true && currentActiveRef) { remove(currentActiveRef); currentActiveRef = null; }
+        };
 
         window.startExamNow = async (sid, idx) => {
             activeTestIdx=idx; 
@@ -552,7 +618,7 @@
             userAnswers=new Array(currentExamQs.length).fill(null); 
             questionDurations=new Array(currentExamQs.length).fill(0); 
             lastQTime=Date.now();
-            qIdx=0; closeTestList(); document.getElementById('exam-overlay').style.display='flex'; document.querySelector('.nav-dock').style.display='none';
+            qIdx=0; closeTestList(true); document.getElementById('exam-overlay').style.display='flex'; document.querySelector('.nav-dock').style.display='none';
             renderQuestion(); startTimer(dm*60);
         };
 
