@@ -505,12 +505,14 @@
             }
         };
         
+        // --- UPDATED RAZORPAY FUNCTIONS WITH WEBVIEW_INTENT SUPPORT ---
         window.buyNote = (id, p, ti) => { 
             new Razorpay({
                 key: "rzp_live_Ry7zglI0OnE1Jo", 
                 amount: p * 100, 
                 name: "Manoj Nehra",
                 description: ti || "Premium Notes",
+                webview_intent: true, // ENABLES UPI INTENT FOR KODULAR WEBVIEW
                 handler: async () => { 
                     await set(ref(db,`users/${auth.currentUser.uid}/purchases/notes/${id}`),{paid:true}); 
                     loadNotes(); 
@@ -527,7 +529,6 @@
         };
         
         window.buyTest = (id, p, ti) => { 
-            // FINAL SAFETY NET: IF RAZORPAY TRIES TO OPEN WITH AMOUNT 0, AUTO UNLOCK IT
             if(Number(p) === 0) {
                 set(ref(db,`users/${auth.currentUser.uid}/purchases/tests/${id}`),{paid:true}).then(() => {
                     loadTestSeries();
@@ -540,6 +541,7 @@
                 amount: p * 100, 
                 name: "Manoj Nehra", 
                 description: ti || "Test Series",
+                webview_intent: true, // ENABLES UPI INTENT FOR KODULAR WEBVIEW
                 handler: async () => { 
                     await set(ref(db,`users/${auth.currentUser.uid}/purchases/tests/${id}`), {paid:true}); 
                     loadTestSeries(); 
@@ -690,19 +692,13 @@
                 }
             });
             
-            // --- SMART NEGATIVE MARKING LOGIC ---
-            // Handles both ratio (e.g. 4 means 1/4th) and decimal (e.g. 0.25 means 1/4th) inputs from Admin Panel
-            
             let marksPerRight = parseFloat(curPos); // e.g. 1 or 2
             let negVal = parseFloat(curRatio); // e.g. 0.25 or 4
             let marksPerWrong;
 
             if (negVal >= 1) {
-                // If admin input is like '3' or '4' (implies 1/3 or 1/4 division)
                 marksPerWrong = marksPerRight / negVal;
             } else {
-                // If admin input is decimal like '0.25' or '0.33' (implies multiplication)
-                // BUT user wants 0.25 deduction, not 0.25 of marks. So if negVal < 1, assume it IS the deduction amount
                 marksPerWrong = negVal; 
             }
             
@@ -727,7 +723,6 @@
             document.getElementById('res-right').innerText = correctCount;
             document.getElementById('res-wrong').innerText = wrongCount;
             document.getElementById('res-skipped').innerText = skippedCount;
-            // Removed Positive Marks Display per request
             document.getElementById('res-neg-marks').innerText = `-${totalNegMarks.toFixed(2)}`;
             document.getElementById('res-time').innerText = timeFmt;
 
@@ -763,13 +758,11 @@
                 let t=Math.round(questionDurations[i]||0); 
                 let img=q.img?`<div class="my-2"><img src="${q.img}" style="max-height:100px;max-width:100%"></div>`:'';
                 
-                // Get text for user answer
                 let userAnsText = "None";
                 if(userAnswers[i]) {
                     userAnsText = `Option ${userAnswers[i]} (${q.options[parseInt(userAnswers[i])-1]})`;
                 }
 
-                // Get text for correct answer
                 let correctAnsText = `Option ${q.ans||q.answer} (${q.options[parseInt(q.ans||q.answer)-1]})`;
 
                 b.innerHTML+=`<div class="review-card ${r?'correct':'wrong'}"><div class="d-flex justify-content-between mb-2"><h6>Q.${i+1}</h6><span class="badge bg-secondary"><i class="fa fa-clock me-1"></i>${t}s</span></div><div class="fw-bold mb-2">${q.q}</div>${img}<p class="small mb-1">Your: ${userAnsText}</p><p class="small text-success">Right: ${correctAnsText}</p></div>`;
